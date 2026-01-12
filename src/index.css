@@ -1,0 +1,50 @@
+/**
+ * Global Styles
+ * 
+ * Sets up:
+ * - Tailwind CSS directives
+ * - CSS custom properties for theming
+ * - Base body styles
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Theme Variables
+   ============================================
+   CSS custom properties for theming.
+   These variables are used throughout the app
+   to maintain consistent colors in dark/light modes.
+*/
+
+/* Dark Theme Variables */
+body[data-theme="dark"] {
+  --bg-primary: #0a0a0a;        /* Main background */
+  --bg-secondary: #151515;      /* Card/component background */
+  --text-primary: #f5f5f5;      /* Main text color */
+  --text-secondary: #a0a0a0;    /* Secondary text color */
+  --border-color: #2a2a2a;      /* Border color */
+}
+
+/* Light Theme Variables */
+body[data-theme="light"] {
+  --bg-primary: #fafafa;        /* Main background */
+  --bg-secondary: #ffffff;       /* Card/component background */
+  --text-primary: #0a0a0a;      /* Main text color */
+  --text-secondary: #666666;    /* Secondary text color */
+  --border-color: #e0e0e0;      /* Border color */
+}
+
+/* ============================================
+   Base Styles
+   ============================================
+*/
+
+body {
+  font-family: 'Crimson Pro', serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s;
+}
