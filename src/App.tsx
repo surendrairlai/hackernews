@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import { ErrorState, LoadMoreButton } from './components/LoadingError';
 import { SkeletonCard, StoryCard } from './components/StoryCard';
-import { STORIES_PER_PAGE } from './config/constants';
+import { STORIES_PER_PAGE, INITIAL_STORIES_COUNT } from './config/constants';
 import './index.css';
 import { fetchStories, fetchStoryIds, Story } from './services/hnAPI';
 
@@ -20,7 +20,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [displayCount, setDisplayCount] = useState(STORIES_PER_PAGE);
+  const [displayCount, setDisplayCount] = useState(INITIAL_STORIES_COUNT);
   const [isMobile, setIsMobile] = useState(false);
 
   /**
@@ -33,12 +33,12 @@ function App() {
       setError(null);
       const ids = await fetchStoryIds(view);
       setStoryIds(ids);
-      const idsToLoad = ids.slice(0, STORIES_PER_PAGE);
+      const idsToLoad = ids.slice(0, INITIAL_STORIES_COUNT);
       const fetchedStories = await fetchStories(idsToLoad);
       // Filter out deleted or dead stories
       const validStories = fetchedStories.filter(s => s && !s.deleted && !s.dead);
       setStories(validStories);
-      setDisplayCount(STORIES_PER_PAGE);
+      setDisplayCount(INITIAL_STORIES_COUNT);
     } catch (err) {
       setError('Failed to load stories. Please try again.');
     } finally {
@@ -91,7 +91,7 @@ function App() {
     if (newView !== view) {
       setView(newView);
       setStories([]);
-      setDisplayCount(STORIES_PER_PAGE);
+      setDisplayCount(INITIAL_STORIES_COUNT);
     }
   };
 
