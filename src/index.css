@@ -42,9 +42,14 @@ body[data-theme="light"] {
    ============================================
 */
 
+html {
+  overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shift and rumbling */
+}
+
 body {
   font-family: 'Crimson Pro', serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   transition: background 0.3s, color 0.3s;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
