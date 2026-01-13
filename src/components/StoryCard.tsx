@@ -33,13 +33,13 @@ export const StoryCard: React.FC<StoryCardProps> = ({ story, rank, layout = 'lis
 
       <div className={`min-w-0 flex flex-col ${isGrid ? 'flex-1' : 'col-span-2 sm:col-span-1'}`}>
         {/* Story title - always shows full title */}
-        <h2 className={`font-serif font-bold leading-tight ${isGrid ? 'text-base sm:text-lg lg:text-xl mb-3' : 'text-base sm:text-lg lg:text-xl mb-2'
+        <h2 className={`font-serif font-bold leading-tight ${isGrid ? 'text-lg sm:text-xl lg:text-2xl mb-3' : 'text-lg sm:text-xl lg:text-2xl mb-2'
           }`}>
           <a
             href={story.url || commentsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-accent-hover transition-colors break-words dark:text-text-dark text-text-light"
+            className="hover:text-accent-hover transition-colors break-words dark:text-gray-300 text-gray-800"
           >
             {story.title}
           </a>
