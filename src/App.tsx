@@ -4,7 +4,7 @@ import { ErrorState, LoadMoreButton } from './components/LoadingError';
 import { SkeletonCard, StoryCard } from './components/StoryCard';
 import { STORIES_PER_PAGE, INITIAL_STORIES_COUNT } from './config/constants';
 import './index.css';
-import { fetchStories, fetchStoryIds, Story } from './services/hnAPI';
+import { fetchValidStories, fetchStoryIds, Story } from './services/hnAPI';
 
 /**
  * Main application component
@@ -34,9 +34,7 @@ function App() {
       const ids = await fetchStoryIds(view);
       setStoryIds(ids);
       const idsToLoad = ids.slice(0, INITIAL_STORIES_COUNT);
-      const fetchedStories = await fetchStories(idsToLoad);
-      // Filter out deleted or dead stories
-      const validStories = fetchedStories.filter(s => s && !s.deleted && !s.dead);
+      const validStories = await fetchValidStories(idsToLoad);
       setStories(validStories);
       setDisplayCount(INITIAL_STORIES_COUNT);
     } catch (err) {
@@ -78,13 +76,18 @@ function App() {
    * Appends new stories to existing list for infinite scroll effect
    */
   const handleLoadMore = async () => {
-    setLoadingMore(true);
-    const idsToLoad = storyIds.slice(displayCount, displayCount + STORIES_PER_PAGE);
-    const fetchedStories = await fetchStories(idsToLoad);
-    const validStories = fetchedStories.filter(s => s && !s.deleted && !s.dead);
-    setStories(prev => [...prev, ...validStories]);
-    setDisplayCount(prev => prev + STORIES_PER_PAGE);
-    setLoadingMore(false);
+    try {
+      setLoadingMore(true);
+      setError(null);
+      const idsToLoad = storyIds.slice(displayCount, displayCount + STORIES_PER_PAGE);
+      const validStories = await fetchValidStories(idsToLoad);
+      setStories(prev => [...prev, ...validStories]);
+      setDisplayCount(prev => prev + STORIES_PER_PAGE);
+    } catch (err) {
+      setError('Failed to load more stories. Please try again.');
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleViewChange = (newView: 'top' | 'new') => {
