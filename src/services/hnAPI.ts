@@ -28,7 +28,7 @@ export const fetchStoryIds = async (type: 'top' | 'new'): Promise<number[]> => {
 /**
  * Fetches a single story by ID
  */
-export const fetchStory = async (id: number) => {
+export const fetchStory = async (id: number): Promise<Story> => {
   const response = await fetch(`${API_BASE_URL}/item/${id}.json`);
   if (!response.ok) throw new Error('Failed to fetch story');
   return response.json();
@@ -40,6 +40,15 @@ export const fetchStory = async (id: number) => {
  */
 export const fetchStories = async (ids: number[]): Promise<Story[]> => {
   return Promise.all(ids.map(id => fetchStory(id)));
+};
+
+/**
+ * Fetches stories and filters out deleted and dead items
+ * @param ids - Array of story IDs to fetch
+ */
+export const fetchValidStories = async (ids: number[]): Promise<Story[]> => {
+  const fetchedStories = await fetchStories(ids);
+  return fetchedStories.filter(s => s && !s.deleted && !s.dead);
 };
 
 /**
