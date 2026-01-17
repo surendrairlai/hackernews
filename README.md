@@ -200,6 +200,17 @@ npm test
 - Captures videos and traces on failure
 
 
+Assumptions
+
+- The official Hacker News API is read-only; posting comments or voting is out of scope.
+- The application focuses on content discovery and readability, not full interaction.
+- Story discussions and comments link out to news.ycombinator.com.
+- Pagination is implemented as incremental loading (“Load More”) to keep UX predictable and avoid excessive API requests.
+- Story IDs are fetched first, followed by batched item requests, as required by the Hacker News API design
+- Deleted and dead stories are filtered out and not displayed
+- Grid/List layout is a user preference, while mobile devices are forced to list view for readability
+- End-to-end tests use the live Hacker News API, which may introduce some flakiness; API mocking would be used in a production setup
+
 ## 📝 Available Scripts
 
 - `npm run dev` - Start development server
