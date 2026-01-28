@@ -1,234 +1,219 @@
 # Hacker News Redesign
 
-A modern, responsive redesign of Hacker News built with React, TypeScript, and Tailwind CSS. This application provides an improved user experience with dark/light theme support, flexible layout options, and smooth interactions.
+A modern, responsive Hacker News client built with React, TypeScript, and Tailwind CSS.
 
-## 🚀 Features
+## Features
 
-- **🌓 Dark/Light Theme Toggle** 
-- **📐 Grid/List Layout Toggle**
-- **📰 Top/New Stories** 
-- **📱 Fully Responsive** 
-- **🔄 Auto-refresh** - Data refreshes every 60 seconds
-- **💾 Smart Caching** - React Query caches API responses
-- **⚡ Fast Performance** 
-- **🧪 E2E Testing** 
+| Feature | Description |
+|---------|-------------|
+| 🌓 Dark/Light Theme | Toggle between themes with smooth transitions |
+| 📐 Grid/List Layout | Choose your preferred view (hidden on mobile) |
+| 📰 Top/New Stories | Switch between popular and recent stories |
+| 📱 Responsive Design | Optimized for mobile, tablet, and desktop |
+| ♾️ Infinite Scroll | Stories load automatically using IntersectionObserver |
+| 🔄 Auto-refresh | Data updates every 60 seconds in background |
+| 💾 Smart Caching | React Query caches data for 5 minutes |
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **React 18** 
-- **TypeScript**
-- **Tailwind CSS 3** 
-- **Vite** 
-- **React Query (TanStack Query)** - Server state management & caching
-- **Playwright** 
-- **Hacker News Firebase API** 
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.2 | UI library with hooks |
+| TypeScript | 5.x | Type safety |
+| Tailwind CSS | 3.x | Utility-first styling |
+| React Query | 5.x | Data fetching, caching, synchronization |
+| react-intersection-observer | 10.x | Infinite scroll detection |
+| Vite | 5.x | Fast build tool |
+| Playwright | 1.x | E2E testing |
 
-## 📋 Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-
-## 🏃 Quick Start
-
-### Installation
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd hackernews
-
 # Install dependencies
 npm install
-```
 
-### Development
-
-```bash
-# Start the development server
+# Start development server
 npm run dev
-```
 
-The application will be available at `http://localhost:3000`
-
-### Building for Production
-
-```bash
-# Build the application
+# Build for production
 npm run build
 
-# Preview the production build
-npm run preview
-```
-
-### Testing
-
-```bash
-# Install Playwright browsers (first time only)
-npx playwright install
-
-# Run tests
+# Run E2E tests
 npm test
-
-# Run tests in UI mode
-npm run test:ui
-
-# Run tests in headed mode (see browser)
-npm run test:headed
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-hackernews/
-├── src/
-│   ├── components/
-│   │   ├── Header.tsx          # Navigation header with toggles
-│   │   ├── StoryCard.tsx       # Story display component (grid/list/skeleton)
-│   │   └── LoadingError.tsx    # Error states and load more button
-│   ├── config/
-│   │   └── constants.ts        # App constants (API URL, pagination, time intervals)
-│   ├── hooks/
-│   │   └── useStories.ts       # React Query hooks for data fetching
-│   ├── services/
-│   │   └── hnAPI.ts            # Hacker News API service functions
-│   ├── App.tsx                 # Main application component
-│   ├── main.tsx                # Application entry point with QueryClientProvider
-│   └── index.css               # Global styles and Tailwind imports
-├── tests/
-│   └── app.spec.js             # Playwright E2E tests
-├── public/
-│   └── favicon.svg             # Hacker News favicon
-├── index.html                  # HTML template
-├── vite.config.js              # Vite configuration
-├── tailwind.config.js          # Tailwind CSS configuration
-├── playwright.config.js        # Playwright test configuration
-└── package.json                # Dependencies and scripts
+src/
+├── App.tsx                  # Main component - state management, layout
+├── main.tsx                 # Entry point - React Query provider setup
+├── index.css                # Global styles, Tailwind imports
+│
+├── components/
+│   ├── Header.tsx           # Fixed navbar with view/layout/theme toggles
+│   ├── StoryCard.tsx        # Story display - supports grid/list layouts
+│   └── LoadingError.tsx     # ErrorState, LoadMoreButton, SkeletonCard
+│
+├── hooks/
+│   ├── useStories.ts        # useStoryIds, useFetchStories (React Query)
+│   └── useTheme.ts          # Theme state with dark class toggle
+│
+├── services/
+│   └── hnAPI.ts             # API functions, Story interface, utilities
+│
+└── config/
+    └── constants.ts         # API_BASE_URL, pagination settings, time intervals
 ```
 
-## 🏗️ Architecture
+## Architecture
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           App.tsx                               │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
+│  │ useStoryIds │───▶│ useFetchStories │───▶│ stories state │    │
+│  │ (top/new)   │    │ (batch fetch)    │    │               │    │
+│  └─────────────┘    └──────────────┘    └─────────────────┘       │
+│         │                                        │              │
+│         ▼                                        ▼              │
+│  ┌─────────────┐                         ┌─────────────┐       │
+│  │ React Query │                         │ StoryCard   │       │
+│  │ Cache       │                         │ (render)    │       │
+│  └─────────────┘                         └─────────────┘       │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Component Hierarchy
 
 ```
 App
 ├── Header
-│   ├── View Toggle (Top/New)
-│   ├── Layout Toggle (Grid/List) - Hidden on mobile
-│   └── Theme Toggle (Dark/Light)
-└── Main Content
-    ├── Story List/Grid
-    │   └── StoryCard (multiple)
-    └── Load More Button
+│   ├── Logo (gradient text)
+│   ├── BtnGroup: View Toggle (Top/New)
+│   ├── BtnGroup: Layout Toggle (Grid/List) [hidden on mobile]
+│   └── Theme Toggle Button (☀️/🌙)
+│
+└── Main
+    ├── Page Title & Description
+    ├── ErrorState (conditional)
+    ├── SkeletonCard × 12 (while loading)
+    └── Stories Container
+        ├── StoryCard × n
+        └── LoadMoreButton (with IntersectionObserver ref)
 ```
 
-### Data Flow with React Query
+## State Management
 
-1. **Initial Load**
-   - User opens the app
-   - `useStoryIds` hook fetches story IDs (cached for 30 seconds)
-   - `useStoriesData` hook fetches story details in parallel
-   - Stories are displayed in the selected layout
+| State | Type | Purpose |
+|-------|------|---------|
+| `view` | `'top' \| 'new'` | Current story feed |
+| `layout` | `'grid' \| 'list'` | Display layout |
+| `displayCount` | `number` | How many stories to show |
+| `stories` | `Story[]` | Accumulated fetched stories |
+| `theme` | `'dark' \| 'light'` | Current theme |
 
-2. **Caching & Auto-refresh**
-   - Data is cached and considered fresh for 30 seconds
-   - Auto-refresh every 60 seconds keeps data up-to-date
-   - Switching views uses cached data if available (instant!)
+## React Query Configuration
 
-3. **View Change**
-   - User clicks "Top Stories" or "New Stories"
-   - If cached data exists and is fresh, displays instantly
-   - Otherwise fetches new story IDs
-   - Display count resets
+```typescript
+// Query Client (main.tsx)
+{
+  refetchOnWindowFocus: false,  // Don't refetch when tab focused
+  retry: 2,                      // Retry failed requests twice
+}
 
-4. **Load More**
-   - User clicks "Load More" button
-   - App loads next 30 stories from remaining IDs
-   - New stories are appended to existing list
-
-
-### API Integration
-
-The app uses the official [Hacker News Firebase API](https://github.com/HackerNews/API):
-
-- **Base URL**: `https://hacker-news.firebaseio.com/v0`
-- **Endpoints**:
-  - `/topstories.json` - Returns array of top story IDs
-  - `/newstories.json` - Returns array of new story IDs
-  - `/item/{id}.json` - Returns story details
-
-### Key Features Implementation
-
-#### React Query Integration
-- `useStoryIds` - Fetches and caches story ID lists
-- `useStoriesData` - Fetches and caches story details
-- `staleTime: 30s` - Data considered fresh for 30 seconds
-- `refetchInterval: 60s` - Auto-refresh every minute
-- `gcTime: 30min` - Cached data kept for 30 minutes
-
-#### Theme Toggle
-- Uses Tailwind's dark mode with class strategy
-- Toggles `dark` class on `document.documentElement`
-
-#### Layout Toggle
-- Grid: Responsive 1/2/3 column layout (mobile/tablet/desktop)
-- List: Single column vertical layout
-- Layout toggle hidden on mobile (always uses list)
-
-#### Mobile Optimization
-- Automatically detects mobile screen size (< 768px)
-- Forces list layout on mobile for better UX
-- Layout toggle button hidden on mobile devices
-
-#### Pagination
-- Loads 15 stories initially, then 30 per page
-- "Load More" button appears when more stories are available
-- Parallel fetching of story details for performance
-- Filters out deleted and dead stories
-
-## 🎨 Styling
-
-The application uses Tailwind CSS with a custom color scheme:
-
-- **Dark Theme**: Dark backgrounds with light text
-- **Light Theme**: Light backgrounds with dark text
-- **Accent Colors**: Used for active states and highlights
-- **Responsive Breakpoints**: Mobile-first approach
-
-## 🧪 Testing
-
-The project includes comprehensive Playwright tests covering:
-
-- ✅ Story loading and display
-- ✅ Theme switching
-- ✅ Layout switching
-- ✅ View switching (Top/New stories)
-- ✅ Responsive behavior (desktop/mobile)
-
-Run tests with:
-```bash
-npm test
+// Query Config (useStories.ts)
+{
+  staleTime: 5 * 60 * 1000,      // Data fresh for 5 minutes
+  gcTime: 30 * 60 * 1000,        // Keep in cache for 30 minutes
+  refetchInterval: 60 * 1000,    // Auto-refresh every 60 seconds
+}
 ```
 
-### Playwright Configuration
-- Tests run against `http://localhost:3000`
-- Automatically starts dev server if not running
-- Captures videos and traces on failure
+## API Reference
+
+Base URL: `https://hacker-news.firebaseio.com/v0`
+
+| Endpoint | Method | Returns |
+|----------|--------|---------|
+| `/topstories.json` | GET | Array of top 500 story IDs |
+| `/newstories.json` | GET | Array of newest 500 story IDs |
+| `/item/{id}.json` | GET | Story object |
+
+### Story Object
+
+```typescript
+interface Story {
+  id: number;
+  title: string;
+  url?: string;        // External link (may be missing for Ask HN)
+  score: number;       // Upvotes
+  by: string;          // Author username
+  time: number;        // Unix timestamp
+  descendants: number; // Comment count
+  deleted?: boolean;   // Filtered out
+  dead?: boolean;      // Filtered out
+}
+```
+
+## Responsive Breakpoints
+
+| Breakpoint | Width | Changes |
+|------------|-------|---------|
+| Mobile | < 768px | List layout only, "Top"/"New" short labels |
+| Tablet (md) | ≥ 768px | Grid/List toggle visible, 2-column grid |
+| Desktop (lg) | ≥ 1024px | Full button text, 3-column grid |
+
+## Key Implementation Details
+
+### Infinite Scroll
+- Uses `react-intersection-observer` with `threshold: 0.1` and `rootMargin: '100px'`
+- LoadMoreButton has ref attached for detection
+- Triggers when button enters viewport, loads next batch
+
+### Incremental Loading
+- Only fetches NEW story IDs, not all from start
+- `idsToFetch = storyIds.slice(stories.length, displayCount)`
+- Appends to existing stories array
+
+### Theme Toggle
+- Adds/removes `dark` class on `document.documentElement`
+- Tailwind's `dark:` variants handle all styling
+- Persists during session (not in localStorage)
+
+### View Change Reset
+- Switching Top/New clears stories array
+- Resets displayCount to initial value
+- Prevents mixing stories from different feeds
+
+## Pagination Settings
+
+```typescript
+// config/constants.ts
+INITIAL_STORIES_COUNT: 15  // First load
+STORIES_PER_PAGE: 10       // Each "load more"
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite dev server (port 5173) |
+| `npm run build` | TypeScript compile + Vite production build |
+| `npm run preview` | Preview production build locally |
+| `npm test` | Run Playwright E2E tests |
+| `npm run test:headed` | Run tests with browser visible |
+
+## Assumptions & Decisions
+
+1. **React Query over manual fetching** - Provides caching, deduplication, background refresh
+2. **IntersectionObserver over scroll events** - More performant, native browser API
+3. **Tailwind dark mode (class strategy)** - Easy toggle, no flash on load
+4. **Fixed header** - Always accessible navigation
+5. **List layout on mobile** - Better UX for small screens
+6. **No localStorage for theme** - Keeps code simple, defaults to dark
+7. **Filter deleted/dead stories** - Cleaner user experience
 
 
-## Assumptions
-
-- The official Hacker News API is read-only; posting comments or voting is out of scope.
-- The application focuses on content discovery and readability, not full interaction.
-- Story discussions and comments link out to news.ycombinator.com.
-- Pagination is implemented as incremental loading ("Load More") to keep UX predictable and avoid excessive API requests.
-- Story IDs are fetched first, followed by batched item requests, as required by the Hacker News API design
-- Deleted and dead stories are filtered out and not displayed
-- Grid/List layout is a user preference, while mobile devices are forced to list view for readability
-- End-to-end tests use the live Hacker News API, which may introduce some flakiness; API mocking would be used in a production setup
-
-## 📝 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm test` - Run Playwright tests

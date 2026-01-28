@@ -1,24 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchStoryIds, fetchStories, Story } from '../services/hnAPI';
 
-export const useStoryIds = (type: 'top' | 'new') => {
-  return useQuery({
-    queryKey: ['storyIds', type],
-    queryFn: () => fetchStoryIds(type),
-    staleTime: 30 * 1000,         // Data fresh for 30 seconds
-    gcTime: 30 * 60 * 1000,       // Keep in cache for 30 minutes
-    refetchInterval: 60 * 1000,   // Auto-refresh every 1 minute
-  });
+const QUERY_CONFIG = {
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  refetchInterval: 60 * 1000,
 };
 
-export const useStoriesData = (ids: number[], enabled: boolean) => {
-  return useQuery({
-    queryKey: ['stories', ids],
+export const useStoryIds = (type: 'top' | 'new') => 
+  useQuery({
+    queryKey: ['storyIds', type],
+    queryFn: () => fetchStoryIds(type),
+    ...QUERY_CONFIG,
+  });
+
+export const useFetchStories = (ids: number[], enabled: boolean) =>
+  useQuery({
+    queryKey: ['stories', ids.join(',')],
     queryFn: () => fetchStories(ids),
     enabled: enabled && ids.length > 0,
-    staleTime: 30 * 1000,         // Data fresh for 30 seconds
-    gcTime: 30 * 60 * 1000,       // Keep in cache for 30 minutes
-    refetchInterval: 60 * 1000,   // Auto-refresh every 1 minute
+    ...QUERY_CONFIG,
     select: (data: Story[]) => data.filter(s => s && !s.deleted && !s.dead),
   });
-};
