@@ -8,7 +8,8 @@ A modern, responsive redesign of Hacker News built with React, TypeScript, and T
 - **📐 Grid/List Layout Toggle**
 - **📰 Top/New Stories** 
 - **📱 Fully Responsive** 
-- **🔄 Infinite Scroll** 
+- **🔄 Auto-refresh** - Data refreshes every 60 seconds
+- **💾 Smart Caching** - React Query caches API responses
 - **⚡ Fast Performance** 
 - **🧪 E2E Testing** 
 
@@ -18,6 +19,7 @@ A modern, responsive redesign of Hacker News built with React, TypeScript, and T
 - **TypeScript**
 - **Tailwind CSS 3** 
 - **Vite** 
+- **React Query (TanStack Query)** - Server state management & caching
 - **Playwright** 
 - **Hacker News Firebase API** 
 
@@ -85,20 +87,22 @@ hackernews/
 │   │   └── LoadingError.tsx    # Error states and load more button
 │   ├── config/
 │   │   └── constants.ts        # App constants (API URL, pagination, time intervals)
+│   ├── hooks/
+│   │   └── useStories.ts       # React Query hooks for data fetching
 │   ├── services/
 │   │   └── hnAPI.ts            # Hacker News API service functions
 │   ├── App.tsx                 # Main application component
-│   ├── main.tsx                # Application entry point
-│   └── index.css              # Global styles and Tailwind imports
+│   ├── main.tsx                # Application entry point with QueryClientProvider
+│   └── index.css               # Global styles and Tailwind imports
 ├── tests/
 │   └── app.spec.js             # Playwright E2E tests
 ├── public/
 │   └── favicon.svg             # Hacker News favicon
 ├── index.html                  # HTML template
-├── vite.config.js             # Vite configuration
-├── tailwind.config.js         # Tailwind CSS configuration
-├── playwright.config.js       # Playwright test configuration
-└── package.json               # Dependencies and scripts
+├── vite.config.js              # Vite configuration
+├── tailwind.config.js          # Tailwind CSS configuration
+├── playwright.config.js        # Playwright test configuration
+└── package.json                # Dependencies and scripts
 ```
 
 ## 🏗️ Architecture
@@ -117,21 +121,26 @@ App
     └── Load More Button
 ```
 
-### Data Flow
+### Data Flow with React Query
 
 1. **Initial Load**
    - User opens the app
-   - App fetches story IDs from Hacker News API (`/topstories.json` or `/newstories.json`)
-   - App loads first 30 story details in parallel
+   - `useStoryIds` hook fetches story IDs (cached for 30 seconds)
+   - `useStoriesData` hook fetches story details in parallel
    - Stories are displayed in the selected layout
 
-2. **View Change**
+2. **Caching & Auto-refresh**
+   - Data is cached and considered fresh for 30 seconds
+   - Auto-refresh every 60 seconds keeps data up-to-date
+   - Switching views uses cached data if available (instant!)
+
+3. **View Change**
    - User clicks "Top Stories" or "New Stories"
-   - App fetches new story IDs
-   - App resets and loads first 30 stories
+   - If cached data exists and is fresh, displays instantly
+   - Otherwise fetches new story IDs
    - Display count resets
 
-3. **Load More**
+4. **Load More**
    - User clicks "Load More" button
    - App loads next 30 stories from remaining IDs
    - New stories are appended to existing list
@@ -149,16 +158,21 @@ The app uses the official [Hacker News Firebase API](https://github.com/HackerNe
 
 ### Key Features Implementation
 
+#### React Query Integration
+- `useStoryIds` - Fetches and caches story ID lists
+- `useStoriesData` - Fetches and caches story details
+- `staleTime: 30s` - Data considered fresh for 30 seconds
+- `refetchInterval: 60s` - Auto-refresh every minute
+- `gcTime: 30min` - Cached data kept for 30 minutes
+
 #### Theme Toggle
 - Uses Tailwind's dark mode with class strategy
 - Toggles `dark` class on `document.documentElement`
-- Preference saved to localStorage
 
 #### Layout Toggle
 - Grid: Responsive 1/2/3 column layout (mobile/tablet/desktop)
 - List: Single column vertical layout
 - Layout toggle hidden on mobile (always uses list)
-- Preference saved to localStorage
 
 #### Mobile Optimization
 - Automatically detects mobile screen size (< 768px)
@@ -166,7 +180,7 @@ The app uses the official [Hacker News Firebase API](https://github.com/HackerNe
 - Layout toggle button hidden on mobile devices
 
 #### Pagination
-- Loads 30 stories per page
+- Loads 15 stories initially, then 30 per page
 - "Load More" button appears when more stories are available
 - Parallel fetching of story details for performance
 - Filters out deleted and dead stories
@@ -188,6 +202,7 @@ The project includes comprehensive Playwright tests covering:
 - ✅ Theme switching
 - ✅ Layout switching
 - ✅ View switching (Top/New stories)
+- ✅ Responsive behavior (desktop/mobile)
 
 Run tests with:
 ```bash
@@ -200,12 +215,12 @@ npm test
 - Captures videos and traces on failure
 
 
-Assumptions
+## Assumptions
 
 - The official Hacker News API is read-only; posting comments or voting is out of scope.
 - The application focuses on content discovery and readability, not full interaction.
 - Story discussions and comments link out to news.ycombinator.com.
-- Pagination is implemented as incremental loading (“Load More”) to keep UX predictable and avoid excessive API requests.
+- Pagination is implemented as incremental loading ("Load More") to keep UX predictable and avoid excessive API requests.
 - Story IDs are fetched first, followed by batched item requests, as required by the Hacker News API design
 - Deleted and dead stories are filtered out and not displayed
 - Grid/List layout is a user preference, while mobile devices are forced to list view for readability
@@ -217,8 +232,3 @@ Assumptions
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm test` - Run Playwright tests
-
-
-
-
-

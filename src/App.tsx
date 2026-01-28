@@ -1,55 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Header from './components/Header';
 import { ErrorState, LoadMoreButton } from './components/LoadingError';
 import { SkeletonCard, StoryCard } from './components/StoryCard';
 import { STORIES_PER_PAGE, INITIAL_STORIES_COUNT } from './config/constants';
 import './index.css';
-import { fetchValidStories, fetchStoryIds, Story } from './services/hnAPI';
+import { useStoryIds, useStoriesData } from './hooks/useStories';
 
-/**
- * Main application component
- * Manages state for view (top/new), layout (grid/list), theme, and stories
- */
 function App() {
-
   const [view, setView] = useState<'top' | 'new'>('top');
   const [layout, setLayout] = useState<'grid' | 'list'>('list');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [stories, setStories] = useState<Story[]>([]);
-  const [storyIds, setStoryIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(INITIAL_STORIES_COUNT);
   const [isMobile, setIsMobile] = useState(false);
 
-  /**
-   * Fetches story IDs and loads the first page of stories
-   * Filters out deleted and dead stories
-   */
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const ids = await fetchStoryIds(view);
-      setStoryIds(ids);
-      const idsToLoad = ids.slice(0, INITIAL_STORIES_COUNT);
-      const validStories = await fetchValidStories(idsToLoad);
-      setStories(validStories);
-      setDisplayCount(INITIAL_STORIES_COUNT);
-    } catch (err) {
-      setError('Failed to load stories. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch story IDs using React Query (cached!)
+  const { 
+    data: storyIds = [], 
+    isLoading: idsLoading, 
+    error: idsError 
+  } = useStoryIds(view);
 
-  // Reload stories when view changes (top/new)
+  // Get only the IDs we need for current page
+  const idsToFetch = useMemo(
+    () => storyIds.slice(0, displayCount),
+    [storyIds, displayCount]
+  );
+
+  // Fetch stories using React Query (cached!)
+  const { 
+    data: stories = [], 
+    isLoading: storiesLoading,
+    isFetching: storiesFetching,
+    error: storiesError 
+  } = useStoriesData(idsToFetch, storyIds.length > 0);
+
+  const loading = idsLoading || storiesLoading;
+  const loadingMore = storiesFetching && !storiesLoading;
+  const error = idsError || storiesError;
+
+  // Reset display count when view changes
   useEffect(() => {
-    loadData();
+    setDisplayCount(INITIAL_STORIES_COUNT);
   }, [view]);
 
-  // Apply dark mode class to document root for Tailwind dark mode
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -58,52 +51,32 @@ function App() {
     }
   }, [theme]);
 
-  // Detect mobile screen size and force list layout on mobile
-  // Uses Tailwind's md breakpoint (768px)
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
     };
-
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  /**
-   * Loads the next page of stories
-   * Appends new stories to existing list for infinite scroll effect
-   */
-  const handleLoadMore = async () => {
-    try {
-      setLoadingMore(true);
-      setError(null);
-      const idsToLoad = storyIds.slice(displayCount, displayCount + STORIES_PER_PAGE);
-      const validStories = await fetchValidStories(idsToLoad);
-      setStories(prev => [...prev, ...validStories]);
-      setDisplayCount(prev => prev + STORIES_PER_PAGE);
-    } catch (err) {
-      setError('Failed to load more stories. Please try again.');
-    } finally {
-      setLoadingMore(false);
-    }
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + STORIES_PER_PAGE);
   };
 
   const handleViewChange = (newView: 'top' | 'new') => {
     if (newView !== view) {
       setView(newView);
-      setStories([]);
       setDisplayCount(INITIAL_STORIES_COUNT);
     }
   };
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  }
+  };
 
   const hasMore = displayCount < storyIds.length;
-  // Force list layout on mobile for better UX, use selected layout on desktop
   const effectiveLayout = isMobile ? 'list' : layout;
   const isGrid = effectiveLayout === 'grid';
 
@@ -128,7 +101,7 @@ function App() {
           </p>
         </div>
 
-        {error && <ErrorState message={error} theme={theme} />}
+        {error && <ErrorState message="Failed to load stories. Please try again." theme={theme} />}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
