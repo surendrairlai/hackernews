@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 import Header from './components/Header';
 import { ErrorState, LoadMoreButton, SkeletonCard } from './components/LoadingError';
@@ -13,6 +13,17 @@ export default function App() {
   const [layout, setLayout] = useState<'grid' | 'list'>('list');
   const [displayCount, setDisplayCount] = useState(INITIAL_STORIES_COUNT);
   const [stories, setStories] = useState<Story[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const { theme, toggleTheme } = useTheme();
   const { ref, inView } = useInView({ threshold: 0.1, rootMargin: '100px' });
@@ -74,6 +85,18 @@ export default function App() {
           </>
         )}
       </main>
+
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 p-3 rounded-full bg-accent text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+        aria-label="Scroll to top"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+        </svg>
+      </button>
     </div>
   );
 }
